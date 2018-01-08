@@ -6,7 +6,13 @@ namespace Simplex
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            LPParser parser = new LPParser();
+            parser.SetObjectiveFunction("8x + 10y + 7z");
+            parser.AddConstraint("x + 3y + 2z < 10");
+            parser.AddConstraint("x + 5x + z < 8");
+            parser.LinearProgram.Output();
+            new Simplex(parser.LinearProgram).Solve();
+            Console.ReadKey();
         }
     }
 }
