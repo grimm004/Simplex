@@ -30,7 +30,7 @@ namespace Simplex
                 constraints[i] = new ConstraintRow(i, constraints.Length, LinearProgram.Constraints[i].GetVars(), LinearProgram.Constraints[i].Constant);
 
             firstTablar.Constraints = constraints;
-            firstTablar.ObjectiveRow = new ObjectiveRow { ObjectiveVariable = 0, Vars = LinearProgram.ObjectiveFunction.GetVars() };
+            firstTablar.ObjectiveRow = new ObjectiveRow(constraints.Length, LinearProgram.ObjectiveFunction.GetVars(), 0);
 
             
             Tablar currentTablar = firstTablar;
@@ -48,13 +48,16 @@ namespace Simplex
 
                 currentTablar.ObjectiveRow = (currentTablar.Constraints[index] - (currentTablar.ObjectiveRow.Vars[mostNegitive.Index].Value * currentTablar.ObjectiveRow));
 
+                currentTablar.ObjectiveRow.RHS = (currentTablar.Constraints[index].RHS - (currentTablar.ObjectiveRow.Vars[mostNegitive.Index].Value * currentTablar.ObjectiveRow.RHS));
+
                 for (int i = 0; i < currentTablar.Constraints.Length; i++)
                     if (i != index)
+                    {
                         currentTablar.Constraints[i] = (currentTablar.Constraints[index] - (currentTablar.Constraints[i].Vars[mostNegitive.Index].Value * currentTablar.Constraints[i]));
-                
+                        currentTablar.Constraints[i].RHS = (currentTablar.Constraints[index].RHS - (currentTablar.Constraints[i].Vars[mostNegitive.Index].Value * currentTablar.Constraints[i].RHS));
+                    }
 
-
-                break;
+                Console.WriteLine(currentTablar.ObjectiveRow.RHS);
             }
         }
 
@@ -77,8 +80,17 @@ namespace Simplex
 
     class ObjectiveRow
     {
-        public double ObjectiveVariable { get; set; }
+        public double RHS { get; set; }
         public Var[] Vars { get; set; }
+
+        public ObjectiveRow(int constraintCount, Var[] variables, double rhs)
+        {
+            RHS = rhs;
+            Vars = new Var[variables.Length + constraintCount];
+            Array.Copy(variables, 0, Vars, 0, variables.Length);
+            for (int i = variables.Length; i < Vars.Length; i++)
+                Vars[i] = new Slack() { Index = i, Value = 0 };
+        }
 
         public static ObjectiveRow operator *(double left, ObjectiveRow right)
         {
@@ -119,7 +131,7 @@ namespace Simplex
         public ConstraintRow(int constraintIndex, int constraintCount, Var[] variables, double rhs)
         {
             RHS = rhs;
-            Vars = new Var[variables.Length * constraintCount];
+            Vars = new Var[variables.Length + constraintCount];
             Array.Copy(variables, 0, Vars, 0, variables.Length);
             for (int i = variables.Length; i < Vars.Length; i++)
                 Vars[i] = new Slack() { Index = i, Value = constraintIndex == i ? 1 : 0 };
