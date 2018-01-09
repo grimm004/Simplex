@@ -48,10 +48,10 @@ namespace Simplex
             else Console.WriteLine("No Objective Function");
         }
 
-        public Var[] GetVars()
+        public Variable[] GetVars()
         {
             KeyValuePair<char, double>[] kvVars = Variables.ToArray();
-            Var[] vars = new Var[kvVars.Length];
+            Variable[] vars = new Variable[kvVars.Length];
 
             for (int i = 0; i < kvVars.Length; i++)
                 vars[i] = new Variable { Index = i, Placeholder = kvVars[i].Key, Value = kvVars[i].Value };
