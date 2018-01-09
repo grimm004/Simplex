@@ -58,8 +58,9 @@ namespace Simplex
             foreach (char character in constraintString)
             {
                 i++;
-                if (postInequality && enteringConstant && (character == ' ' || i == constraintString.Length))
+                if (postInequality && (enteringConstant && (character == ' ') || i == constraintString.Length))
                 {
+                    if (i == constraintString.Length) coefficientText += character;
                     if (double.TryParse(coefficientText, out double coefficient))
                         constraint.SetConstant(coefficient * (negitive ? -1 : 1));
                     break;

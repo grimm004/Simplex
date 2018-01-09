@@ -43,7 +43,7 @@ namespace Simplex
                     if (variables[i].Value * variables[i].Value != 1) Console.Write($"{ (variables[i].Value * (variables[i].Value < 0 ? -1 : 1)) }");
                     Console.Write($"{ variables[i].Key }");
                 }
-                Console.WriteLine();
+                Console.WriteLine($" < { Constant }");
             }
             else Console.WriteLine("No Objective Function");
         }
