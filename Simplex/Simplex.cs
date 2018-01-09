@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
 
 // https://www.youtube.com/watch?v=iwDiG2mR6FM
@@ -31,26 +30,29 @@ namespace Simplex
             initialTableau.Constraints = constraints;
             initialTableau.ObjectiveRow = new ObjectiveRow(constraints.Length, LinearProgram.ObjectiveFunction.GetVars(), 0);
 
+            initialTableau.Output();
+            Console.WriteLine();
+
             Var[] emptyVars = initialTableau.ObjectiveRow.Vars.Where(var => var.GetType() == typeof(Variable)).Select(var => ((Variable)var).Empty).ToArray();
 
             Tableau currentTableau = new Tableau(initialTableau.Constraints.Length, initialTableau.ObjectiveRow.Vars.Length, emptyVars), previousTableau = initialTableau.Copy();
             while (MostNegitive(previousTableau, out Var mostNegitive))
             {
                 int index = 0;
-                double leastPositive = currentTableau.Constraints.Length > 0 ? currentTableau.Constraints[0].RatioTest(mostNegitive) : 0;
-                for (int i = 0; i < currentTableau.Constraints.Length; i++)
+                double leastPositive = previousTableau.Constraints.Length > 0 ? previousTableau.Constraints[index].RatioTest(mostNegitive) : -1;
+                for (int i = 0; i < previousTableau.Constraints.Length; i++)
                 {
-                    double rt = currentTableau.Constraints[i].RatioTest(mostNegitive);
+                    double rt = previousTableau.Constraints[i].RatioTest(mostNegitive);
                     if (rt > 0 && rt < leastPositive) { leastPositive = rt; index = i; }
                 }
-
+                
                 if (leastPositive == 0) throw new Exception("Least Positive is Unchanged");
 
                 currentTableau.Constraints[index] = (1 / leastPositive) * previousTableau.Constraints[index];
 
                 currentTableau.ObjectiveRow = (previousTableau.Constraints[index] - (previousTableau.ObjectiveRow.Vars[mostNegitive.Index].Value * previousTableau.ObjectiveRow));
                 currentTableau.ObjectiveRow.RHS = (previousTableau.Constraints[index].RHS - (previousTableau.ObjectiveRow.Vars[mostNegitive.Index].Value * previousTableau.ObjectiveRow.RHS));
-
+                
                 for (int i = 0; i < currentTableau.Constraints.Length; i++)
                     if (i != index)
                     {
@@ -58,10 +60,12 @@ namespace Simplex
                         currentTableau.Constraints[i].RHS = (previousTableau.Constraints[index].RHS - (previousTableau.Constraints[i].Vars[mostNegitive.Index].Value * previousTableau.Constraints[i].RHS));
                     }
 
-                Console.WriteLine(currentTableau.ObjectiveRow.RHS);
+                previousTableau.Output();
+
                 previousTableau = currentTableau.Copy();
                 currentTableau = previousTableau.CopyAttributes();
             }
+            Console.WriteLine(previousTableau.ObjectiveRow.RHS);
         }
 
         private bool MostNegitive(Tableau tablar, out Var mostNegitive)
@@ -70,8 +74,9 @@ namespace Simplex
             foreach (Var var in tablar.ObjectiveRow.Vars)
                 if (var.Value < mostNegitive.Value) mostNegitive = var;
 
-            if (mostNegitive.Index == -1) return false;
-            else return true;
+            Console.WriteLine($"MN: {mostNegitive.Value}");
+
+            return mostNegitive.Index != -1;
         }
     }
 
@@ -113,6 +118,23 @@ namespace Simplex
                 ObjectiveRow = new ObjectiveRow(Constraints.Length, new List<Var>(vars).ToArray(), 0),
                 Constraints = constraintRows,
             };
+        }
+
+        public void Output()
+        {
+            for (int j = 0; j < ObjectiveRow.Vars.Length; j++)
+            {
+                Console.Write($"{ ObjectiveRow.Vars[j].Value.ToString("0.00") } ");
+            }
+            Console.WriteLine($"{ ObjectiveRow.RHS.ToString("0.00") }");
+            for (int i = 0; i < Constraints.Length; i++)
+            {
+                for (int j = 0; j < Constraints[i].Vars.Length; j++)
+                {
+                    Console.Write($"{ Constraints[i].Vars[j].Value.ToString("0.00") } ");
+                }
+                Console.WriteLine($"{ Constraints[i].RHS.ToString("0.00") }");
+            }
         }
     }
 
@@ -195,7 +217,7 @@ namespace Simplex
             Vars = new Var[variables.Length + constraintCount];
             Array.Copy(variables, 0, Vars, 0, variables.Length);
             for (int i = variables.Length; i < Vars.Length; i++)
-                Vars[i] = new Slack() { Index = i, Value = constraintIndex == i ? 1 : 0 };
+                Vars[i] = new Slack() { Index = i, Value = (constraintIndex == (i - variables.Length) ? 1d : 0d) };
         }
 
         public ConstraintRow(int constraintIndex, Var[] vars)
@@ -209,7 +231,7 @@ namespace Simplex
 
         public double RatioTest(Var var)
         {
-            return RHS / var.Value;
+            return RHS / Vars[var.Index].Value;
         }
 
         public static ConstraintRow operator *(double left, ConstraintRow right)

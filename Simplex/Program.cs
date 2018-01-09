@@ -7,6 +7,8 @@ namespace Simplex
         static void Main(string[] args)
         {
             LPParser parser = new LPParser();
+            //parser.SetObjectiveFunction(Console.ReadLine());
+            //parser.LinearProgram.ObjectiveFunction.Output();
             parser.SetObjectiveFunction("8x + 10y + 7z");
             parser.AddConstraint("x + 3y + 2z < 10");
             parser.AddConstraint("x + 5y + z < 8");
