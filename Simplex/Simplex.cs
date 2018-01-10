@@ -28,15 +28,10 @@ namespace Simplex
             previousTableau.Constraints = constraints;
             previousTableau.ObjectiveRow = new ObjectiveRow(constraints.Length, LinearProgram.ObjectiveFunction.GetVars());
 
-            previousTableau.Output();
-            Console.WriteLine();
-
             Variable[] emptyVars = previousTableau.ObjectiveRow.Vars.Where(var => !var.IsSlack).Select(var => var.Empty).ToArray();
             Tableau currentTableau = Tableau.EmptyTableau(previousTableau.Constraints.Length, emptyVars);
             while (MostNegitive(previousTableau, out Variable mostNegitive))
             {
-                Console.WriteLine($"Most Negitive { mostNegitive.Index } at { mostNegitive.Value }");
-
                 int index = 0;
                 double leastPositive = previousTableau.Constraints.Length > 0 ? previousTableau.Constraints[index].RatioTest(mostNegitive) : -1;
                 for (int i = 0; i < previousTableau.Constraints.Length; i++)
@@ -46,8 +41,6 @@ namespace Simplex
                 }
                 
                 if (leastPositive == 0) throw new Exception("Least Positive is Unchanged");
-
-                Console.WriteLine($"Least Positive RT { index } at { leastPositive }");
                 
                 currentTableau.Constraints[index] = previousTableau.Constraints[index].PivotRow(mostNegitive.Index);
                 
@@ -57,13 +50,13 @@ namespace Simplex
                     if (i != index)
                         currentTableau.Constraints[i] = previousTableau.Constraints[i].Normalize(mostNegitive.Index, currentTableau.Constraints[index].Vars, currentTableau.Constraints[index].RHS);
                 
-                previousTableau.Output();
-
                 previousTableau = currentTableau.Copy();
                 currentTableau = Tableau.EmptyTableau(previousTableau.Constraints.Length, emptyVars);
-
-                Console.WriteLine(previousTableau.ObjectiveRow.RHS);
             }
+
+            foreach (Variable var in previousTableau.BasicAnalysis())
+                Console.WriteLine($"{ var.Placeholder } = { var.Value }");
+            Console.WriteLine($"Maximum: { previousTableau.ObjectiveRow.RHS }");
         }
 
         private bool MostNegitive(Tableau tablar, out Variable mostNegitive)
@@ -111,6 +104,13 @@ namespace Simplex
             ConstraintRow[] constraintRow = new ConstraintRow[Constraints.Length];
             Constraints.CopyTo(constraintRow, 0);
             return new Tableau() { Constraints = constraintRow, ObjectiveRow = new ObjectiveRow() { Vars = new List<Variable>(ObjectiveRow.Vars).ToArray(), RHS = ObjectiveRow.RHS } };
+        }
+
+        public Variable[] BasicAnalysis()
+        {
+
+
+            return new Variable[0];
         }
     }
 
