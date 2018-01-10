@@ -53,6 +53,7 @@ namespace Simplex
                 previousTableau = currentTableau.Copy();
                 currentTableau = Tableau.EmptyTableau(previousTableau.Constraints.Length, emptyVars);
             }
+            previousTableau.Output();
 
             foreach (Variable var in previousTableau.BasicAnalysis())
                 Console.WriteLine($"{ var.Placeholder } = { var.Value }");
