@@ -59,9 +59,10 @@ namespace Simplex
                 
                 previousTableau.Output();
 
-                Console.WriteLine(previousTableau.ObjectiveRow.RHS);
+                previousTableau = currentTableau.Copy();
+                currentTableau = Tableau.EmptyTableau(previousTableau.Constraints.Length, emptyVars);
 
-                break;
+                Console.WriteLine(previousTableau.ObjectiveRow.RHS);
             }
         }
 
@@ -103,6 +104,13 @@ namespace Simplex
                 }
                 Console.WriteLine($"{ Constraints[i].RHS.ToString("0.00") }");
             }
+        }
+
+        public Tableau Copy()
+        {
+            ConstraintRow[] constraintRow = new ConstraintRow[Constraints.Length];
+            Constraints.CopyTo(constraintRow, 0);
+            return new Tableau() { Constraints = constraintRow, ObjectiveRow = new ObjectiveRow() { Vars = new List<Variable>(ObjectiveRow.Vars).ToArray(), RHS = ObjectiveRow.RHS } };
         }
     }
 
