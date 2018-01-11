@@ -18,7 +18,7 @@ namespace Simplex
         public void VerifyVariables(char[] variables)
         {
             foreach (char variable in variables)
-                Variables.TryAdd(variable, 0);
+                if (!Variables.ContainsKey(variable)) Variables.Add(variable, 0);
         }
 
         public void AddVariable(char varName, double coefficient)
@@ -39,6 +39,7 @@ namespace Simplex
                 List<KeyValuePair<char, double>> variables = Variables.ToList();
                 for (int i = 0; i < variables.Count; i++)
                 {
+                    if (i == 0 && variables[i].Value < 0) Console.Write("-");
                     Console.Write($"{ (i > 0 ? (variables[i].Value < 0 ? " - " : " + ") : "") }");
                     if (variables[i].Value * variables[i].Value != 1) Console.Write($"{ (variables[i].Value * (variables[i].Value < 0 ? -1 : 1)) }");
                     Console.Write($"{ variables[i].Key }");
