@@ -62,10 +62,6 @@ namespace SimplexMethod
 
             if (string.IsNullOrWhiteSpace(objectiveFunctionString)) return false;
             
-            // > 4x + y
-            // x - y < 200
-            // 4x + 200y < 4000
-            // 7x + 2y < 3
             string coefficientText = "";
             bool negitive = false;
             char previousChar = ' ';

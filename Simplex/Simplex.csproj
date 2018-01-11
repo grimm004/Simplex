@@ -44,7 +44,6 @@
     <Compile Include="LinearProgram.cs" />
     <Compile Include="LPParser.cs" />
     <Compile Include="ObjectiveFunction.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Simplex.cs" />
   </ItemGroup>

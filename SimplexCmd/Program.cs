@@ -7,7 +7,7 @@ namespace SimpleCmd
     {
         static void Main(string[] args)
         {
-            LinearProgram[] linearProgrammes = new LinearProgram[5];
+            LinearProgram[] linearProgrammes = new LinearProgram[6];
 
             LPParser parser = new LPParser();
             parser.SetObjectiveFunction("8x + 10y + 7z");
@@ -40,6 +40,12 @@ namespace SimpleCmd
             parser.AddConstraint("x + y < 800");
             parser.AddConstraint("x < 350");
             linearProgrammes[4] = parser.LinearProgram;
+
+            parser = new LPParser();
+            parser.SetObjectiveFunction("2x + 3y");
+            parser.AddConstraint("x + y < 2000");
+            parser.AddConstraint("8x + 14y < 20000");
+            linearProgrammes[5] = parser.LinearProgram;
 
             for (int i = 0; i < linearProgrammes.Length; i++)
             {

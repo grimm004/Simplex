@@ -75,17 +75,13 @@ namespace SimplexMethod
         public LPSolution(Tableau finalTableau)
         {
             Results = finalTableau.BasicVariableAnalysis();
-            Maximum = finalTableau.ObjectiveRow.RHS;
+            Maximum = finalTableau.ObjectiveRow.RHS * 2;
         }
 
         public void Output()
         {
-            for (int i = 0; i < Results.Length; i++)
-            {
-                if (Results[i].IsSlack) Console.WriteLine("SLACK");
-            }
             Console.WriteLine(string.Join(", ", Results.ToList()));
-            Console.WriteLine($"Maximum: { Maximum }");
+            Console.WriteLine($"Maximum: { Maximum.ToString("0.00") }");
         }
     }
 
@@ -151,7 +147,7 @@ namespace SimplexMethod
                                 Placeholder = ObjectiveRow.Vars[i].Placeholder,
                                 IsSlack = ObjectiveRow.Vars[i].IsSlack,
                                 SlackIndex = ObjectiveRow.Vars[i].SlackIndex,
-                                Value = Constraints[j].RHS
+                                Value = Constraints[j].RHS * 2
                             });
                 }
                 else vars.Add(new Variable()
@@ -248,7 +244,7 @@ namespace SimplexMethod
 
         public override string ToString()
         {
-            return !IsSlack ? $"{ Placeholder } = { Value }" : $"slack<{ SlackIndex }> = { Value }";
+            return !IsSlack ? $"{ Placeholder } = { Value.ToString("0.00") }" : $"slack<{ SlackIndex }> = { Value.ToString("0.00") }";
         }
     }
 }
