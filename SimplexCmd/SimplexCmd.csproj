@@ -50,7 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Simplex\Simplex.csproj">
-      <Project>{d5d23c73-0b95-4846-b4e0-cab33429ac49}</Project>
+      <Project>{288dbf42-c1e2-4067-96a8-d87ec5c9a500}</Project>
       <Name>Simplex</Name>
     </ProjectReference>
   </ItemGroup>
