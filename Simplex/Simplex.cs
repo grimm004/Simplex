@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-// https://www.youtube.com/watch?v=iwDiG2mR6FM
-
-namespace Simplex
+namespace SimplexMethod
 {
-    class Simplex
+    public class Simplex
     {
         public LinearProgram LinearProgram { get; set; }
 
@@ -15,7 +13,7 @@ namespace Simplex
             LinearProgram = linearProgram;
         }
 
-        public void Solve()
+        public LPSolution Solve()
         {
             LinearProgram.VerifyVariables();
             
@@ -54,10 +52,7 @@ namespace Simplex
                 currentTableau = Tableau.EmptyTableau(previousTableau.Constraints.Length, emptyVars);
             }
 
-            Console.WriteLine();
-            Console.WriteLine("Solution:");
-            Console.WriteLine(string.Join(", ", previousTableau.BasicAnalysis().ToList()));
-            Console.WriteLine($"Maximum: { previousTableau.ObjectiveRow.RHS }");
+            return new LPSolution(previousTableau);
         }
 
         private bool MostNegitive(Tableau tablar, out Variable mostNegitive)
@@ -70,7 +65,31 @@ namespace Simplex
         }
     }
 
-    class Tableau
+    public class LPSolution
+    {
+        public Variable[] Results { get; private set; }
+        public double Maximum { get; private set; }
+
+        public LPSolution() { }
+
+        public LPSolution(Tableau finalTableau)
+        {
+            Results = finalTableau.BasicVariableAnalysis();
+            Maximum = finalTableau.ObjectiveRow.RHS;
+        }
+
+        public void Output()
+        {
+            for (int i = 0; i < Results.Length; i++)
+            {
+                if (Results[i].IsSlack) Console.WriteLine("SLACK");
+            }
+            Console.WriteLine(string.Join(", ", Results.ToList()));
+            Console.WriteLine($"Maximum: { Maximum }");
+        }
+    }
+
+    public class Tableau
     {
         public ObjectiveRow ObjectiveRow { get; set; }
         public ConstraintRow[] Constraints { get; set; }
@@ -88,7 +107,7 @@ namespace Simplex
         public void Output()
         {
             for (int i = 0; i < ObjectiveRow.Vars.Length; i++)
-                Console.Write($"{ (ObjectiveRow.Vars[i].IsSlack ? $"s<{ i - Constraints.Length }>" : ObjectiveRow.Vars[i].Placeholder.ToString()) }\t");
+                Console.Write($"{ (ObjectiveRow.Vars[i].IsSlack ? $"s<{ i - ObjectiveRow.Vars[i].SlackIndex }>" : ObjectiveRow.Vars[i].Placeholder.ToString()) }\t");
             Console.WriteLine($"RHS");
             for (int i = 0; i < Constraints.Length; i++)
             {
@@ -108,34 +127,48 @@ namespace Simplex
             return new Tableau() { Constraints = constraintRow, ObjectiveRow = new ObjectiveRow() { Vars = new List<Variable>(ObjectiveRow.Vars).ToArray(), RHS = ObjectiveRow.RHS } };
         }
 
-        public Variable[] BasicAnalysis()
+        public Variable[] BasicVariableAnalysis()
         {
             List<Variable> vars = new List<Variable>();
             for (int i = 0; i < ObjectiveRow.Vars.Length; i++)
             {
-                bool isBasic = true;
                 bool hasUnit = false;
+                bool isBasic = true;
                 for (int j = 0; j < Constraints.Length; j++)
                 {
-                    double a = Constraints[j].Vars[i].Value;
-                    if (a == 1 && !hasUnit) hasUnit = true;
-                    else if ((hasUnit && a != 0) || (!hasUnit && a != 0)) isBasic = false;
+                    double value = Constraints[j].Vars[i].Value;
+                    if (value == 1 && !hasUnit) hasUnit = true;
+                    else if ((hasUnit && value != 0) || (!hasUnit && value != 0)) isBasic = false;
                 }
-
+                
                 if (isBasic)
                 {
                     for (int j = 0; j < Constraints.Length; j++)
                         if (Constraints[j].Vars[i].Value == 1d)
-                            vars.Add(new Variable() { Index = Constraints[j].Vars[i].Index, Placeholder = Constraints[j].Vars[i].Placeholder, IsSlack = Constraints[j].Vars[i].IsSlack, Value = Constraints[j].RHS });
+                            vars.Add(new Variable()
+                            {
+                                Index = ObjectiveRow.Vars[i].Index,
+                                Placeholder = ObjectiveRow.Vars[i].Placeholder,
+                                IsSlack = ObjectiveRow.Vars[i].IsSlack,
+                                SlackIndex = ObjectiveRow.Vars[i].SlackIndex,
+                                Value = Constraints[j].RHS
+                            });
                 }
-                else vars.Add(new Variable() { Index = ObjectiveRow.Vars[i].Index, Placeholder = ObjectiveRow.Vars[i].Placeholder, IsSlack = ObjectiveRow.Vars[i].IsSlack, Value = 0 });
+                else vars.Add(new Variable()
+                {
+                    Index = ObjectiveRow.Vars[i].Index,
+                    Placeholder = ObjectiveRow.Vars[i].Placeholder,
+                    IsSlack = ObjectiveRow.Vars[i].IsSlack,
+                    SlackIndex = ObjectiveRow.Vars[i].SlackIndex,
+                    Value = 0
+                });
             }
 
             return vars.ToArray();
         }
     }
 
-    class ObjectiveRow
+    public class ObjectiveRow
     {
         public Variable[] Vars { get; set; }
         public double RHS { get; set; }
@@ -148,7 +181,7 @@ namespace Simplex
             for (int i = 0; i < vars.Length; i++)
                 Vars[i] = new Variable() { Index = i, IsSlack = false, Value = vars[i].Value, Placeholder = vars[i].Placeholder, };
             for (int i = vars.Length; i < Vars.Length; i++)
-                Vars[i] = new Variable() { Index = i, IsSlack = true, Value = 0, };
+                Vars[i] = new Variable() { Index = i, IsSlack = true, SlackIndex = i - vars.Length, Placeholder = null, Value = 0, };
             RHS = 0;
         }
 
@@ -156,12 +189,12 @@ namespace Simplex
         {
             Variable[] newVars = new Variable[Vars.Length];
             for (int i = 0; i < Vars.Length; i++)
-                newVars[i] = new Variable() { Index = i, IsSlack = Vars[i].IsSlack, Placeholder = Vars[i].Placeholder, Value = (-Vars[pivotIndex].Value * pivotVars[i].Value) + Vars[i].Value };
+                newVars[i] = new Variable() { Index = i, IsSlack = Vars[i].IsSlack, SlackIndex = Vars[i].SlackIndex, Placeholder = Vars[i].Placeholder, Value = (-Vars[pivotIndex].Value * pivotVars[i].Value) + Vars[i].Value };
             return new ObjectiveRow() { Vars = newVars, RHS = (-Vars[pivotIndex].Value * pivotRhs) + RHS };
         }
     }
 
-    class ConstraintRow
+    public class ConstraintRow
     {
         public int Index { get; set; }
         public Variable[] Vars { get; set; }
@@ -174,9 +207,9 @@ namespace Simplex
             Index = index;
             Vars = new Variable[vars.Length + constraintCount];
             for (int i = 0; i < vars.Length; i++)
-                Vars[i] = new Variable() { Index = i, IsSlack = false, Value = vars[i].Value, Placeholder = vars[i].Placeholder, };
+                Vars[i] = new Variable() { Index = i, IsSlack = false, SlackIndex = -1, Value = vars[i].Value, Placeholder = vars[i].Placeholder, };
             for (int i = vars.Length; i < Vars.Length; i++)
-                Vars[i] = new Variable() { Index = i, IsSlack = true, Value = (i - vars.Length == i ? 1 : 0), };
+                Vars[i] = new Variable() { Index = i, IsSlack = true, SlackIndex = i - vars.Length, Value = (i - vars.Length == i ? 1 : 0), };
             RHS = rhs;
         }
 
@@ -189,7 +222,7 @@ namespace Simplex
         {
             Variable[] newVars = new Variable[Vars.Length];
             for (int i = 0; i < Vars.Length; i++)
-                newVars[i] = new Variable { Index = i, IsSlack = Vars[i].IsSlack, Placeholder = Vars[i].Placeholder, Value = Vars[i].Value / Vars[pivotIndex].Value };
+                newVars[i] = new Variable { Index = i, IsSlack = Vars[i].IsSlack, SlackIndex = Vars[i].SlackIndex, Placeholder = Vars[i].Placeholder, Value = Vars[i].Value / Vars[pivotIndex].Value };
 
             return new ConstraintRow() { Index = Index, Vars = newVars, RHS = RHS / Vars[pivotIndex].Value };
         }
@@ -198,23 +231,24 @@ namespace Simplex
         {
             Variable[] newVars = new Variable[Vars.Length];
             for (int i = 0; i < Vars.Length; i++)
-                newVars[i] = new Variable() { Index = i, IsSlack = Vars[i].IsSlack, Placeholder = Vars[i].Placeholder, Value = (-Vars[pivotIndex].Value * pivotVars[i].Value) + Vars[i].Value };
+                newVars[i] = new Variable() { Index = i, IsSlack = Vars[i].IsSlack, SlackIndex = Vars[i].SlackIndex, Placeholder = Vars[i].Placeholder, Value = (-Vars[pivotIndex].Value * pivotVars[i].Value) + Vars[i].Value };
             return new ConstraintRow() { Index = Index, Vars = newVars, RHS = (-Vars[pivotIndex].Value * pivotRhs) + RHS };
         }
     }
     
-    class Variable
+    public class Variable
     {
         public int Index { get; set; }
         public char? Placeholder { get; set; }
         public double Value { get; set; }
         public bool IsSlack { get; set; }
+        public int SlackIndex { get; set; }
 
-        public Variable Empty { get { return new Variable() { Index = Index, Placeholder = Placeholder, IsSlack = IsSlack, Value = 0 }; } }
+        public Variable Empty { get { return new Variable() { Index = Index, Placeholder = Placeholder, IsSlack = IsSlack, Value = 0, SlackIndex = -1 }; } }
 
         public override string ToString()
         {
-            return $"{ Placeholder } = { Value }";
+            return !IsSlack ? $"{ Placeholder } = { Value }" : $"slack<{ SlackIndex }> = { Value }";
         }
     }
 }

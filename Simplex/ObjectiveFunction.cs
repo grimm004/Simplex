@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Simplex
+namespace SimplexMethod
 {
-    class ObjectiveFunction
+    public class ObjectiveFunction
     {
         public SortedDictionary<char, double> Variables { get; set; }
 
@@ -15,14 +15,17 @@ namespace Simplex
 
         public void AddVariable(char varName, double coefficient)
         {
-            if (!Variables.TryAdd(varName, coefficient))
+            if (Variables.ContainsKey(varName))
                 Variables[varName] += coefficient;
+            else
+                Variables.Add(varName, coefficient);
         }
 
         public void VerifyVariables(char[] variables)
         {
             foreach (char variable in variables)
-                Variables.TryAdd(variable, 0);
+                if (!Variables.ContainsKey(variable))
+                    Variables.Add(variable, 0);
         }
 
         public void Output()
@@ -51,6 +54,39 @@ namespace Simplex
                 vars[i] = new Variable { Index = i, Placeholder = kvVars[i].Key, Value = -kvVars[i].Value };
 
             return vars;
+        }
+
+        public static bool TryParse(string objectiveFunctionString, out ObjectiveFunction objectiveFunction)
+        {
+            objectiveFunction = new ObjectiveFunction();
+
+            if (string.IsNullOrWhiteSpace(objectiveFunctionString)) return false;
+            
+            // > 4x + y
+            // x - y < 200
+            // 4x + 200y < 4000
+            // 7x + 2y < 3
+            string coefficientText = "";
+            bool negitive = false;
+            char previousChar = ' ';
+            foreach (char character in objectiveFunctionString)
+            {
+                if (character == ' ') continue;
+                else if (character == '+') negitive = false;
+                else if (character == '-') negitive = true;
+
+                if (character == '.' || char.IsDigit(character)) coefficientText += character;
+                else if (char.IsLetter(character) && !char.IsLetter(previousChar))
+                {
+                    if (string.IsNullOrWhiteSpace(coefficientText)) coefficientText = "1";
+                    if (double.TryParse(coefficientText, out double coefficient))
+                        objectiveFunction.AddVariable(character, coefficient * (negitive ? -1 : 1));
+                    coefficientText = "";
+                }
+                else if (char.IsLetter(character) && char.IsLetter(previousChar)) return false;
+                previousChar = character;
+            }
+            return true;
         }
     }
 }

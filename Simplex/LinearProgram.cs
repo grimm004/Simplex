@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 
-namespace Simplex
+namespace SimplexMethod
 {
-    class LinearProgram
+    public class LinearProgram
     {
         public ObjectiveFunction ObjectiveFunction { get; set; }
         public Constraint[] Constraints { get; set; }

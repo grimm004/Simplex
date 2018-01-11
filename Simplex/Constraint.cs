@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Simplex
+namespace SimplexMethod
 {
-    class Constraint
+    public class Constraint
     {
         public SortedDictionary<char, double> Variables { get; set; }
         public double Constant { get; set; }
@@ -23,7 +23,7 @@ namespace Simplex
 
         public void AddVariable(char varName, double coefficient)
         {
-            if (!Variables.TryAdd(varName, coefficient))
+            if (!Variables.ContainsKey(varName)) Variables.Add(varName, coefficient);
                 Variables[varName] += coefficient;
         }
 
@@ -58,6 +58,42 @@ namespace Simplex
                 vars[i] = new Variable { Index = i, Placeholder = kvVars[i].Key, Value = kvVars[i].Value };
 
             return vars;
+        }
+
+        public static bool TryParse(string constraintString, out Constraint constraint)
+        {
+            constraint = new Constraint();
+            string coefficientText = "";
+            bool negitive = false;
+            bool postInequality = false;
+            bool enteringConstant = false;
+            int i = 0;
+            foreach (char character in constraintString)
+            {
+                i++;
+                if (postInequality && (enteringConstant && (character == ' ') || i == constraintString.Length))
+                {
+                    if (i == constraintString.Length) coefficientText += character;
+                    if (double.TryParse(coefficientText, out double coefficient))
+                        constraint.SetConstant(coefficient * (negitive ? -1 : 1));
+                    break;
+                }
+                else if (character == ' ') continue;
+                else if (character == '+') negitive = false;
+                else if (character == '-') negitive = true;
+                else if (character == '<') postInequality = true;
+                else if (postInequality && char.IsDigit(character)) enteringConstant = true;
+
+                if (character == '.' || char.IsDigit(character)) coefficientText += character;
+                else if (!postInequality && char.IsLetter(character))
+                {
+                    if (string.IsNullOrWhiteSpace(coefficientText)) coefficientText = "1";
+                    if (double.TryParse(coefficientText, out double coefficient))
+                        constraint.AddVariable(character, coefficient * (negitive ? -1 : 1));
+                    coefficientText = "";
+                }
+            }
+            return postInequality;
         }
     }
 }

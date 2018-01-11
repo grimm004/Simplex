@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
-namespace Simplex
+namespace SimplexMethod
 {
-    class LPParser
+    public class LPParser
     {
         public LinearProgram LinearProgram
         {
@@ -23,65 +21,25 @@ namespace Simplex
             Constraints = new List<Constraint>();
         }
 
-        public void SetObjectiveFunction(string objectiveFunctionString)
+        public bool SetObjectiveFunction(string objectiveFunctionString)
         {
-            ObjectiveFunction = new ObjectiveFunction();
-            
-            string coefficientText = "";
-            bool negitive = false;
-            foreach (char character in objectiveFunctionString)
-            {
-                if (character == ' ') continue;
-                else if (character == '+') negitive = false;
-                else if (character == '-') negitive = true;
-                
-                if (character == '.' || char.IsDigit(character)) coefficientText += character;
-                else if (char.IsLetter(character))
-                {
-                    if (string.IsNullOrWhiteSpace(coefficientText)) coefficientText = "1";
-                    if (double.TryParse(coefficientText, out double coefficient))
-                        ObjectiveFunction.AddVariable(character, coefficient * (negitive ? -1 : 1));
-                    coefficientText = "";
-                }
-            }
+            if (ObjectiveFunction.TryParse(objectiveFunctionString, out ObjectiveFunction objectiveFunction))
+                ObjectiveFunction = objectiveFunction;
+            else return false;
+            return true;
         }
 
-        public void AddConstraint(string constraintString)
+        public bool AddConstraint(string constraintString)
         {
-            Constraint constraint = new Constraint();
+            if (Constraint.TryParse(constraintString, out Constraint constraint))
+                Constraints.Add(constraint);
+            else return false;
+            return true;
+        }
 
-            string coefficientText = "";
-            bool negitive = false;
-            bool postInequality = false;
-            bool enteringConstant = false;
-            int i = 0;
-            foreach (char character in constraintString)
-            {
-                i++;
-                if (postInequality && (enteringConstant && (character == ' ') || i == constraintString.Length))
-                {
-                    if (i == constraintString.Length) coefficientText += character;
-                    if (double.TryParse(coefficientText, out double coefficient))
-                        constraint.SetConstant(coefficient * (negitive ? -1 : 1));
-                    break;
-                }
-                else if (character == ' ') continue;
-                else if (character == '+') negitive = false;
-                else if (character == '-') negitive = true;
-                else if (character == '<') postInequality = true;
-                else if (postInequality && char.IsDigit(character)) enteringConstant = true;
-                
-                if (character == '.' || char.IsDigit(character)) coefficientText += character;
-                else if (!postInequality && char.IsLetter(character))
-                {
-                    if (string.IsNullOrWhiteSpace(coefficientText)) coefficientText = "1";
-                    if (double.TryParse(coefficientText, out double coefficient))
-                        constraint.AddVariable(character, coefficient * (negitive ? -1 : 1));
-                    coefficientText = "";
-                }
-            }
-
-            Constraints.Add(constraint);
+        public void ClearConstraints()
+        {
+            Constraints.Clear();
         }
     }
 }

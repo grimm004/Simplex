@@ -1,6 +1,7 @@
 ﻿using System;
+using SimplexMethod;
 
-namespace SimplexMethod
+namespace SimpleCmd
 {
     class Program
     {
