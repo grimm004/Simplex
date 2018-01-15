@@ -24,7 +24,7 @@ namespace SimplexMethod
         public void AddVariable(char varName, double coefficient)
         {
             if (!Variables.ContainsKey(varName)) Variables.Add(varName, coefficient);
-                Variables[varName] += coefficient;
+            else Variables[varName] += coefficient;
         }
 
         public void SetConstant(double constant)
@@ -88,7 +88,7 @@ namespace SimplexMethod
                 else if (!postInequality && char.IsLetter(character))
                 {
                     if (string.IsNullOrWhiteSpace(coefficientText)) coefficientText = "1";
-                    if (double.TryParse(coefficientText, out double coefficient))
+                    if (double.TryParse(coefficientText, out double coefficient)) // HERE IS THE PROBLEM
                         constraint.AddVariable(character, coefficient * (negitive ? -1 : 1));
                     coefficientText = "";
                 }

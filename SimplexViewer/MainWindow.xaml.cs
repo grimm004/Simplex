@@ -22,10 +22,11 @@ namespace SimplexViewer
                 bool constraintsValid = true;
                 foreach (string constraint in ConstraintEntry.Text.Split('\n'))
                     constraintsValid &= parser.AddConstraint(constraint);
+
                 if (constraintsValid)
                 {
                     LPSolution solution = new Simplex(parser.LinearProgram).Solve();
-                    ResultsLabel.Content = $"Results:\n{ string.Join(", ", solution.Results.ToList()) }\nMaximum = { solution.Maximum }";
+                    ResultsLabel.Content = $"Final Tableau:\n{ solution.FinalTableau.ToString() }\n\nResults:\n{ string.Join(", ", solution.Results.ToList()) }\nMaximum = { solution.Maximum }";
                 }
                 else ResultsLabel.Content = "Syntax error in constraint.";
             }

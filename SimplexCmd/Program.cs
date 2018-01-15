@@ -35,21 +35,22 @@ namespace SimpleCmd
             linearProgrammes[3] = parser.LinearProgram;
 
             parser = new LPParser();
-            parser.SetObjectiveFunction("30x + 20y");
-            parser.AddConstraint("2x + y < 1000");
-            parser.AddConstraint("x + y < 800");
-            parser.AddConstraint("x < 350");
-            linearProgrammes[4] = parser.LinearProgram;
-
-            parser = new LPParser();
             parser.SetObjectiveFunction("2x + 3y");
             parser.AddConstraint("x + y < 2000");
             parser.AddConstraint("8x + 14y < 20000");
+            linearProgrammes[4] = parser.LinearProgram;
+
+            parser = new LPParser();
+            parser.SetObjectiveFunction("x + 0.8y");
+            parser.AddConstraint("x + y < 1000");
+            parser.AddConstraint("2x + y < 1500");
+            parser.AddConstraint("3x + 2y < 2400");
             linearProgrammes[5] = parser.LinearProgram;
 
             for (int i = 0; i < linearProgrammes.Length; i++)
             {
                 Console.WriteLine("----------------------------------");
+                Console.WriteLine($"LP { i + 1 }");
                 linearProgrammes[i].Output();
                 Console.WriteLine();
                 Console.WriteLine("Solution:");

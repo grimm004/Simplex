@@ -4,13 +4,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="LP Solver" Height="350" Width="200">
+        Title="LP Solver" Height="400" Width="300">
 
     <Grid>
         <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Label Content="Objective Function" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,10,10,0"/>
             <TextBox x:Name="ObjectiveFunctionEntry" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,0,10,0" TextWrapping="Wrap"/>
-            <Label Content="Objective Function" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,10,10,0"/>
+            <Label Content="Constraints" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,10,10,0"/>
             <TextBox x:Name="ConstraintEntry" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinHeight="100" Margin="10,0,10,0" AcceptsReturn="True" TextWrapping="Wrap"/>
             <Button x:Name="SubmitButton" Content="Solve" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,10,10,0" Click="SubmitButtonClick"/>
             <Label x:Name="ResultsLabel" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,10,10,0"/>
